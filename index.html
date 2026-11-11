@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101218">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Moje hudba">
+  <meta name="description" content="Osobní hudební knihovna a přehrávač pro iPhone – lokálně i z vlastního cloudu.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Moje hudba</title>
+</head>
+<body>
+<div id="app" class="app">
+  <header class="topbar">
+    <div class="brand"><span class="brandmark" aria-hidden="true">♪</span><span><strong>Moje hudba</strong><small>Vlastní hudební knihovna</small></span></div>
+    <button class="icon-btn" id="settingsBtn" aria-label="Nastavení">⚙</button>
+  </header>
+
+  <main id="main">
+    <section id="screen-library" class="screen active">
+      <div class="intro"><h1>Moje knihovna</h1><p>Hudba na jednom místě. Online i offline.</p></div>
+      <div class="searchbar"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Hledat skladbu, interpreta, album" autocomplete="off" aria-label="Hledat hudbu"></div>
+      <div class="scroll-filters" id="filterChips" aria-label="Filtr hudby">
+        <button class="chip selected" data-filter="all">Vše</button><button class="chip" data-filter="offline">Stažené</button><button class="chip" data-filter="favorite">Oblíbené</button><button class="chip" data-filter="local">V telefonu</button><button class="chip" data-filter="cloud">Cloud</button>
+      </div>
+      <div class="overview"><div class="stat"><strong id="statTracks">0</strong><small>Skladeb</small></div><div class="stat"><strong id="statArtists">0</strong><small>Interpretů</small></div><div class="stat"><strong id="statOffline">0</strong><small>Offline</small></div></div>
+      <div class="section-head"><h2>Skladby</h2><div class="row-actions"><button class="text-btn" id="shuffleAll">Zamíchat</button><button class="text-btn" id="addMusicTop">+ Přidat</button></div></div>
+      <div id="songList" class="song-list"></div>
+      <p id="emptyMessage" class="empty-message" hidden></p>
+    </section>
+
+    <section id="screen-playlists" class="screen">
+      <div class="intro"><h1>Playlisty</h1><p>Vlastní výběry pro každou náladu.</p></div>
+      <button class="primary wide" id="createPlaylist">+ Nový playlist</button>
+      <div id="playlistList" class="playlist-list"></div>
+      <div id="playlistDetails" hidden></div>
+    </section>
+
+    <section id="screen-import" class="screen">
+      <div class="intro"><h1>Přidat hudbu</h1><p>Import souborů nebo propojení vlastního cloudu.</p></div>
+      <div class="panel"><div class="panel-icon">♫</div><h2>Hudba z iPhonu</h2><p>Vyber soubory MP3, M4A nebo jiné podporované audio. Skladby se uloží přímo do tohoto zařízení pro offline poslech.</p><button class="primary wide" id="pickFiles">Vybrat hudební soubory</button><small class="helper">Více skladeb najednou · obaly a ID3 tagy se načítají automaticky</small></div>
+      <div class="panel"><div class="panel-icon">☁</div><h2>Moje Cloudflare R2</h2><p>Do cloudu lze nahrát velkou knihovnu. V aplikaci bude streamovaná a vybrané skladby si stáhneš offline.</p><label class="field-label" for="cloudUrl">Veřejná adresa hudební knihovny</label><input type="url" id="cloudUrl" placeholder="https://hudba.example.cz/" spellcheck="false"><button class="secondary wide" id="connectCloud">Načíst cloudovou knihovnu</button><small class="helper" id="cloudStatus">Cloud není připojen.</small></div>
+      <div class="panel info"><h3>Jak získat hudbu?</h3><p>Aplikace neumí sama stahovat z YouTube. Umí importovat zvukové soubory, které už máš v aplikaci Soubory, nebo přehrávat tvé vlastní soubory z R2.</p></div>
+      <div id="importProgress" class="status-box" role="status" hidden></div>
+    </section>
+  </main>
+
+  <div id="miniPlayer" class="mini-player" hidden>
+    <button class="mini-open" id="openNowPlaying"><span class="cover mini-cover" id="miniCover">♪</span><span class="mini-copy"><strong id="miniTitle">—</strong><small id="miniArtist">—</small></span></button>
+    <button class="icon-btn" id="miniPrev" aria-label="Předchozí">⏮</button><button class="icon-btn" id="miniPlay" aria-label="Přehrát nebo pozastavit">▶</button><button class="icon-btn" id="miniNext" aria-label="Další">⏭</button>
+    <div class="mini-progress" id="miniProgress"></div>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Hlavní navigace"><button class="nav-item active" data-page="library"><span class="nav-symbol">▤</span><small>Knihovna</small></button><button class="nav-item" data-page="playlists"><span class="nav-symbol">▥</span><small>Playlisty</small></button><button class="nav-item" data-page="import"><span class="nav-symbol">⊕</span><small>Přidat</small></button></nav>
+
+  <div id="playerModal" class="overlay" hidden>
+    <div class="player-sheet" role="dialog" aria-modal="true" aria-label="Přehrávač">
+      <div class="player-toolbar"><button class="icon-btn" id="closePlayer" aria-label="Zavřít přehrávač">⌄</button><small>PŘEHRÁVÁ SE</small><button class="icon-btn" id="playerMore" aria-label="Možnosti skladby">···</button></div>
+      <div class="cover giant-cover" id="bigCover">♪</div>
+      <div class="player-titles"><div><h2 id="bigTitle">—</h2><p id="bigArtist">—</p></div><button class="icon-btn favorite-btn" id="bigFav" aria-label="Oblíbené">♡</button></div>
+      <input type="range" id="seek" min="0" max="1000" value="0" step="1" aria-label="Pozice skladby"><div class="time-row"><span id="currentTime">0:00</span><span id="duration">0:00</span></div>
+      <div class="transport"><button class="icon-btn" id="shuffleBtn" title="Náhodné pořadí" aria-label="Náhodné pořadí">⤨</button><button class="icon-btn transport-mid" id="prevBtn" aria-label="Předchozí">⏮</button><button class="play-big" id="playBtn" aria-label="Přehrát nebo pozastavit">▶</button><button class="icon-btn transport-mid" id="nextBtn" aria-label="Další">⏭</button><button class="icon-btn" id="repeatBtn" title="Opakování" aria-label="Opakování">↻</button></div>
+      <div class="player-bottom"><span id="sourceLabel">V telefonu</span><button id="downloadCurrent" class="text-btn">Uložit offline</button></div>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="overlay" hidden>
+    <div class="dialog-sheet" role="dialog" aria-modal="true" aria-label="Nastavení"><div class="dialog-head"><h2>Nastavení</h2><button class="icon-btn" id="closeSettings" aria-label="Zavřít">✕</button></div>
+      <div class="setting-row"><div><strong>Vzhled</strong><p>Světlý nebo tmavý režim</p></div><select id="themeSelect"><option value="dark">Tmavý</option><option value="light">Světlý</option><option value="system">Podle telefonu</option></select></div>
+      <div class="setting-row"><div><strong>Úložiště</strong><p id="storageStats">Zjišťuji dostupné místo…</p></div><button class="secondary compact" id="refreshStorage">Obnovit</button></div>
+      <div class="setting-row"><div><strong>Záloha playlistů</strong><p>Uloží playlisty a oblíbené, nikoli audio soubory.</p></div><button class="secondary compact" id="exportBackup">Export</button></div>
+      <div class="setting-row"><div><strong>Obnovit zálohu</strong><p>Nahrát dříve exportovaný JSON.</p></div><button class="secondary compact" id="importBackup">Import</button></div>
+      <button class="danger wide" id="clearOffline">Smazat lokální hudbu a offline stažení</button>
+      <p class="helper">Hudba uložená v prohlížeči může být systémem iOS smazána při nedostatku místa nebo po vymazání dat webu. Pro důležité skladby si ponech originály v aplikaci Soubory nebo v cloudu.</p>
+      <small class="build-version">Music Player v1.1 · PWA</small>
+    </div>
+  </div>
+
+  <div id="actionSheet" class="overlay" hidden>
+    <div class="dialog-sheet actions" role="dialog" aria-modal="true" aria-label="Možnosti skladby"><div class="dialog-head"><h2 id="actionTitle">Možnosti</h2><button class="icon-btn" id="closeActions" aria-label="Zavřít">✕</button></div><div id="actionsContainer"></div></div>
+  </div>
+  <input id="fileInput" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.flac,.ogg,.opus" multiple hidden>
+  <input id="backupInput" type="file" accept="application/json,.json" hidden>
+  <audio id="audio" preload="metadata"></audio>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
